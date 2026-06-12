@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>かがみもじ れんしゅうちょう</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBF8F1;        /* 和紙 */
+  --sumi:#2B2926;         /* 墨 */
+  --shu:#C73E3A;          /* 朱（先生の赤ペン） */
+  --shu-soft:#E8B7B5;
+  --guide:#A9BFD4;        /* 練習帳の水色ガイド */
+  --guide-soft:#D7E2EC;
+  --frame:#4A463F;
+  --ink:#1F1D1A;          /* 描画ペンの色 */
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:"Zen Kaku Gothic New",sans-serif;
+  background:
+    radial-gradient(circle at 18% 12%, rgba(199,62,58,.05), transparent 38%),
+    radial-gradient(circle at 85% 90%, rgba(169,191,212,.14), transparent 42%),
+    var(--paper);
+  color:var(--sumi);
+  display:flex;flex-direction:column;align-items:center;
+  min-height:100%;
+  padding:20px 16px 36px;
+}
+
+/* ───── ヘッダー ───── */
+header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+.title{font-family:"Klee One",serif;font-weight:600;font-size:clamp(1.3rem,4.5vw,1.7rem);letter-spacing:.12em;line-height:1.2}
+.title .mirror{display:inline-block;transform:scaleX(-1);color:var(--shu)}
+.subtitle{font-size:.72rem;letter-spacing:.18em;color:#8a857c;margin-top:2px}
+.mode{display:flex;gap:6px}
+.mode button{
+  font-family:inherit;font-size:.74rem;font-weight:500;letter-spacing:.06em;
+  padding:6px 12px;border-radius:999px;border:1.5px solid var(--frame);
+  background:transparent;color:var(--sumi);cursor:pointer;transition:.15s;
+}
+.mode button[aria-pressed="true"]{background:var(--sumi);color:var(--paper);border-color:var(--sumi)}
+.mode button:hover{transform:translateY(-1px)}
+
+/* ───── 田の字グリッド ───── */
+.board-wrap{position:relative;width:min(92vw,560px)}
+.board{
+  position:relative;width:100%;aspect-ratio:1/1;
+  display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;
+  background:#fff;
+  border:3px solid var(--frame);border-radius:6px;
+  box-shadow:0 10px 30px -12px rgba(43,41,38,.28), 0 2px 0 rgba(43,41,38,.06);
+  overflow:hidden;
+}
+/* 中央の太い十字（鏡の軸） */
+.axis-v,.axis-h{position:absolute;background:var(--frame);z-index:5;pointer-events:none}
+.axis-v{left:50%;top:0;bottom:0;width:3px;transform:translateX(-50%)}
+.axis-h{top:50%;left:0;right:0;height:3px;transform:translateY(-50%)}
+.axis-label{
+  position:absolute;z-index:6;background:var(--frame);color:var(--paper);
+  font-size:.62rem;letter-spacing:.14em;padding:3px 8px;border-radius:999px;
+  pointer-events:none;white-space:nowrap;
+}
+.axis-label.top{left:50%;top:-1px;transform:translate(-50%,-50%)}
+.axis-label.side{top:50%;right:-1px;transform:translate(50%,-50%) rotate(90deg);transform-origin:center}
+
+/* 各ブロック */
+.cell{position:relative;background:#fff}
+/* かきかた練習帳ふうの破線ガイド（各ブロック内の十字＝4x4の細線） */
+.cell::before,.cell::after{content:"";position:absolute;pointer-events:none;z-index:1}
+.cell::before{left:50%;top:6%;bottom:6%;border-left:2px dashed var(--guide-soft);transform:translateX(-50%)}
+.cell::after{top:50%;left:6%;right:6%;border-top:2px dashed var(--guide-soft);transform:translateY(-50%)}
+
+.cell-tag{
+  position:absolute;top:8px;left:10px;z-index:4;
+  display:flex;align-items:center;gap:5px;
+  font-size:.66rem;font-weight:700;letter-spacing:.12em;color:#9a958b;
+  pointer-events:none;
+}
+.cell-tag .arrow{font-size:.8rem;color:var(--shu);font-weight:400}
+.cell.model .cell-tag{color:var(--shu)}
+
+/* お手本（右上） */
+.model{background:linear-gradient(180deg,#FFF9F2,#FFFDF8)}
+.model .glyph{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:"Klee One",serif;font-weight:600;color:var(--sumi);
+  font-size:clamp(5rem,30vw,11rem);line-height:1;z-index:2;user-select:none;
+}
+.model .stamp{
+  position:absolute;right:10px;bottom:8px;z-index:3;
+  font-family:"Klee One",serif;font-size:.7rem;color:var(--shu);
+  border:1.5px solid var(--shu);border-radius:4px;padding:2px 6px;letter-spacing:.2em;
+  transform:rotate(-4deg);opacity:.85;pointer-events:none;
+}
+
+/* 手書きキャンバスブロック */
+.cell canvas{position:absolute;inset:0;width:100%;height:100%;z-index:3;touch-action:none;cursor:crosshair}
+.ghost{
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-family:"Klee One",serif;font-weight:600;
+  font-size:clamp(5rem,30vw,11rem);line-height:1;
+  color:var(--guide);opacity:0;transition:opacity .25s;z-index:2;
+  user-select:none;pointer-events:none;
+}
+.show-ghost .ghost{opacity:.32}
+.ghost.flip-x{transform:scaleX(-1)}
+.ghost.flip-y{transform:scaleY(-1)}
+.ghost.flip-xy{transform:scale(-1,-1)}
+
+.cell-clear{
+  position:absolute;right:8px;bottom:8px;z-index:4;
+  width:30px;height:30px;border-radius:50%;
+  border:1.5px solid var(--shu-soft);background:#fff;color:var(--shu);
+  font-size:.95rem;line-height:1;cursor:pointer;transition:.15s;
+  display:flex;align-items:center;justify-content:center;
+}
+.cell-clear:hover{background:var(--shu);color:#fff;border-color:var(--shu)}
+.model .cell-clear{display:none}
+
+/* ───── コントロール ───── */
+.controls{
+  width:min(92vw,560px);display:flex;flex-wrap:wrap;gap:10px;
+  justify-content:center;margin-top:18px;
+}
+.btn{
+  font-family:inherit;font-weight:700;letter-spacing:.1em;cursor:pointer;
+  border-radius:999px;padding:12px 22px;font-size:.88rem;transition:.15s;
+  border:2px solid var(--sumi);
+}
+.btn:active{transform:scale(.97)}
+.btn-next{background:var(--shu);border-color:var(--shu);color:#fff;flex:1;min-width:170px;box-shadow:0 4px 0 #9c2f2c}
+.btn-next:active{box-shadow:0 1px 0 #9c2f2c;transform:translateY(3px)}
+.btn-next:hover{filter:brightness(1.06)}
+.btn-ghost-toggle,.btn-clear-all{background:#fff;color:var(--sumi)}
+.btn-ghost-toggle[aria-pressed="true"]{background:var(--sumi);color:var(--paper)}
+.btn-ghost-toggle:hover,.btn-clear-all:hover{transform:translateY(-1px)}
+
+.hint-text{
+  width:min(92vw,560px);text-align:center;margin-top:14px;
+  font-size:.74rem;color:#8a857c;letter-spacing:.06em;line-height:1.8;
+}
+.hint-text b{color:var(--shu);font-weight:700}
+
+@media (max-width:480px){
+  header{flex-direction:column;align-items:flex-start;gap:8px}
+  .cell-tag{font-size:.58rem;top:6px;left:7px}
+  .axis-label{font-size:.55rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 class="title">かがみ<span class="mirror">もじ</span> れんしゅうちょう</h1>
+    <p class="subtitle">MIRROR WRITING PRACTICE</p>
+  </div>
+  <nav class="mode" aria-label="文字の種類">
+    <button type="button" data-mode="hira" aria-pressed="true">ひらがな</button>
+    <button type="button" data-mode="kata" aria-pressed="false">カタカナ</button>
+    <button type="button" data-mode="mix"  aria-pressed="false">ミックス</button>
+    <button type="button" data-mode="kanji" aria-pressed="false">かんたん漢字</button>
+  </nav>
+</header>
+
+<div class="board-wrap">
+  <div class="board" id="board">
+    <span class="axis-label top">↕ うえした の かがみ</span>
+    <span class="axis-label side">↔ ひだりみぎ の かがみ</span>
+
+    <!-- 左上：左右反転 -->
+    <div class="cell" data-canvas="lr">
+      <span class="cell-tag"><span class="arrow">⇄</span> ひだりみぎ はんてん</span>
+      <div class="ghost flip-x" data-ghost></div>
+      <canvas></canvas>
+      <button class="cell-clear" type="button" title="このマスをクリア" aria-label="左右反転マスをクリア">×</button>
+    </div>
+
+    <!-- 右上：お手本 -->
+    <div class="cell model">
+      <span class="cell-tag">おてほん</span>
+      <div class="glyph" id="glyph">あ</div>
+      <span class="stamp">見本</span>
+    </div>
+
+    <!-- 左下：両方反転 -->
+    <div class="cell" data-canvas="both">
+      <span class="cell-tag"><span class="arrow">⤢</span> りょうほう はんてん</span>
+      <div class="ghost flip-xy" data-ghost></div>
+      <canvas></canvas>
+      <button class="cell-clear" type="button" title="このマスをクリア" aria-label="両方反転マスをクリア">×</button>
+    </div>
+
+    <!-- 右下：上下反転 -->
+    <div class="cell" data-canvas="ud">
+      <span class="cell-tag"><span class="arrow">⇅</span> うえした はんてん</span>
+      <div class="ghost flip-y" data-ghost></div>
+      <canvas></canvas>
+      <button class="cell-clear" type="button" title="このマスをクリア" aria-label="上下反転マスをクリア">×</button>
+    </div>
+
+    <div class="axis-v" aria-hidden="true"></div>
+    <div class="axis-h" aria-hidden="true"></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-next" id="nextBtn" type="button">つぎの文字へ →</button>
+  <button class="btn btn-ghost-toggle" id="ghostBtn" type="button" aria-pressed="false">うすく答えを見る</button>
+  <button class="btn btn-clear-all" id="clearAllBtn" type="button">ぜんぶ消す</button>
+</div>
+
+<p class="hint-text">
+  右上の<b>おてほん</b>を見て、まんなかの線を「かがみ」だと思って書いてみよう。<br>
+  むずかしいときは「うすく答えを見る」でなぞって練習できるよ。
+</p>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ── 文字セット ── */
+  const SETS = {
+    hira: "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをん".split(""),
+    kata: "アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン".split(""),
+    kanji: "山川木林森田日月火水土上下大小中口目手足天空青赤白年生".split("")
+  };
+  SETS.mix = SETS.hira.concat(SETS.kata);
+
+  let mode = "hira";
+  let current = "";
+  const glyphEl = document.getElementById("glyph");
+  const ghosts = document.querySelectorAll("[data-ghost]");
+  const board = document.getElementById("board");
+
+  function pickChar(){
+    const pool = SETS[mode];
+    let next;
+    do { next = pool[Math.floor(Math.random()*pool.length)]; }
+    while (next === current && pool.length > 1);
+    current = next;
+    glyphEl.textContent = current;
+    ghosts.forEach(g => g.textContent = current);
+  }
+
+  /* ── 手書きキャンバス ── */
+  function setupCanvas(cell){
+    const canvas = cell.querySelector("canvas");
+    const ctx = canvas.getContext("2d");
+    let strokes = [];        // [{points:[{x,y},...]}] 0〜1 の相対座標で保持
+    let drawing = null;
+    let w = 0, h = 0;
+
+    function resize(){
+      const r = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      w = r.width; h = r.height;
+      canvas.width  = Math.round(r.width  * dpr);
+      canvas.height = Math.round(r.height * dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      redraw();
+    }
+
+    function redraw(){
+      ctx.clearRect(0,0,w,h);
+      ctx.lineCap = "round";
+      ctx.lineJoin = "round";
+      ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#1F1D1A";
+      ctx.lineWidth = Math.max(4, w * 0.022);
+      for (const s of strokes){
+        const p = s.points;
+        if (!p.length) continue;
+        ctx.beginPath();
+        ctx.moveTo(p[0].x*w, p[0].y*h);
+        if (p.length === 1){ ctx.lineTo(p[0].x*w+0.1, p[0].y*h+0.1); }
+        for (let i=1;i<p.length;i++){
+          const mx = (p[i-1].x+p[i].x)/2*w, my = (p[i-1].y+p[i].y)/2*h;
+          ctx.quadraticCurveTo(p[i-1].x*w, p[i-1].y*h, mx, my);
+        }
+        ctx.stroke();
+      }
+    }
+
+    function rel(e){
+      const r = canvas.getBoundingClientRect();
+      return { x:(e.clientX-r.left)/r.width, y:(e.clientY-r.top)/r.height };
+    }
+
+    canvas.addEventListener("pointerdown", e => {
+      e.preventDefault();
+      canvas.setPointerCapture(e.pointerId);
+      drawing = { points:[rel(e)] };
+      strokes.push(drawing);
+      redraw();
+    });
+    canvas.addEventListener("pointermove", e => {
+      if (!drawing) return;
+      drawing.points.push(rel(e));
+      redraw();
+    });
+    const end = () => { drawing = null; };
+    canvas.addEventListener("pointerup", end);
+    canvas.addEventListener("pointercancel", end);
+
+    cell.querySelector(".cell-clear").addEventListener("click", () => {
+      strokes = []; redraw();
+    });
+
+    window.addEventListener("resize", resize);
+    // 初期化（フォント読込後のレイアウト確定を待つ）
+    requestAnimationFrame(resize);
+
+    return { clear(){ strokes = []; redraw(); } };
+  }
+
+  const pads = Array.from(document.querySelectorAll("[data-canvas]")).map(setupCanvas);
+  function clearAll(){ pads.forEach(p => p.clear()); }
+
+  /* ── ボタン ── */
+  document.getElementById("nextBtn").addEventListener("click", () => {
+    pickChar(); clearAll();
+  });
+  document.getElementById("clearAllBtn").addEventListener("click", clearAll);
+
+  const ghostBtn = document.getElementById("ghostBtn");
+  ghostBtn.addEventListener("click", () => {
+    const on = ghostBtn.getAttribute("aria-pressed") !== "true";
+    ghostBtn.setAttribute("aria-pressed", on);
+    board.classList.toggle("show-ghost", on);
+    ghostBtn.textContent = on ? "答えをかくす" : "うすく答えを見る";
+  });
+
+  /* ── モード切替 ── */
+  document.querySelectorAll(".mode button").forEach(btn => {
+    btn.addEventListener("click", () => {
+      mode = btn.dataset.mode;
+      document.querySelectorAll(".mode button").forEach(b =>
+        b.setAttribute("aria-pressed", b === btn));
+      pickChar(); clearAll();
+    });
+  });
+
+  pickChar();
+})();
+</script>
+</body>
+</html>
