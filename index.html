@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>かがみもじ れんしゅうちょう</title>
+
+<!-- ▽▽▽ PWA（ホーム画面追加・オフライン・URL非表示）用の追記 ▽▽▽ -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="かがみもじ">
+<!-- △△△ ここまで追記 △△△ -->
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -348,6 +356,15 @@ header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-cont
   });
 
   pickChar();
+
+  /* ▽▽▽ PWA（オフライン動作）用の追記 ▽▽▽ */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW登録失敗:', err));
+    });
+  }
+  /* △△△ ここまで追記 △△△ */
+
 })();
 </script>
 </body>
