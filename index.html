@@ -4,14 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>かがみもじ れんしゅうちょう</title>
-
-<!-- ▽▽▽ PWA（ホーム画面追加・オフライン・URL非表示）用の追記 ▽▽▽ -->
-<link rel="manifest" href="manifest.json">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="かがみもじ">
-<!-- △△△ ここまで追記 △△△ -->
-
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Klee+One:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
@@ -40,7 +32,8 @@ body{
 }
 
 /* ───── ヘッダー ───── */
-header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px}
+/* 【修正箇所】flex-wrap: wrap を追加してタイトルが押し潰されないようにしました */
+header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:14px;flex-wrap:wrap;}
 .title{font-family:"Klee One",serif;font-weight:600;font-size:clamp(1.3rem,4.5vw,1.7rem);letter-spacing:.12em;line-height:1.2}
 .title .mirror{display:inline-block;transform:scaleX(-1);color:var(--shu)}
 .subtitle{font-size:.72rem;letter-spacing:.18em;color:#8a857c;margin-top:2px}
@@ -179,11 +172,10 @@ header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-cont
 </header>
 
 <div class="board-wrap">
-  <div class="board" id="board">
-    <span class="axis-label top">↕ うえした の かがみ</span>
-    <span class="axis-label side">↔ ひだりみぎ の かがみ</span>
+  <span class="axis-label top">↕ うえした の かがみ</span>
+  <span class="axis-label side">↔ ひだりみぎ の かがみ</span>
 
-    <!-- 左上：左右反転 -->
+  <div class="board" id="board">
     <div class="cell" data-canvas="lr">
       <span class="cell-tag"><span class="arrow">⇄</span> ひだりみぎ はんてん</span>
       <div class="ghost flip-x" data-ghost></div>
@@ -191,14 +183,12 @@ header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-cont
       <button class="cell-clear" type="button" title="このマスをクリア" aria-label="左右反転マスをクリア">×</button>
     </div>
 
-    <!-- 右上：お手本 -->
     <div class="cell model">
       <span class="cell-tag">おてほん</span>
       <div class="glyph" id="glyph">あ</div>
       <span class="stamp">見本</span>
     </div>
 
-    <!-- 左下：両方反転 -->
     <div class="cell" data-canvas="both">
       <span class="cell-tag"><span class="arrow">⤢</span> りょうほう はんてん</span>
       <div class="ghost flip-xy" data-ghost></div>
@@ -206,7 +196,6 @@ header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-cont
       <button class="cell-clear" type="button" title="このマスをクリア" aria-label="両方反転マスをクリア">×</button>
     </div>
 
-    <!-- 右下：上下反転 -->
     <div class="cell" data-canvas="ud">
       <span class="cell-tag"><span class="arrow">⇅</span> うえした はんてん</span>
       <div class="ghost flip-y" data-ghost></div>
@@ -356,15 +345,6 @@ header{width:100%;max-width:680px;display:flex;align-items:flex-end;justify-cont
   });
 
   pickChar();
-
-  /* ▽▽▽ PWA（オフライン動作）用の追記 ▽▽▽ */
-  if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch(err => console.log('SW登録失敗:', err));
-    });
-  }
-  /* △△△ ここまで追記 △△△ */
-
 })();
 </script>
 </body>
